@@ -67,7 +67,7 @@ export default function GradeRow({
                   type="number"
                   min="0"
                   max="100"
-                  value={Number.isNaN(altWeights[index]?.[j]) ? "" : altWeights[index]?.[j]}
+                  value={Number.isNaN(altWeights[j]?.[index]) ? "" : altWeights[j]?.[index]}
                   onChange={(e) => {
                     const value = Math.max(
                       1,

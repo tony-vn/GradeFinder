@@ -21,15 +21,11 @@ export default function Main() {
     new Array(gradesHist.length).fill(null),
   ]);
   const [answer, setAnswer] = useLocalStorage("altWeightScheme", null);
-  const [columnLength, setColumnLength] = useLocalStorage("columnLength", 2);
 
-  const [totalGradesHist, setTotalGradesHist] = React.useState([[]]);
-  const [totalWeightsHist, setTotalWeightsHist] = React.useState([[[]]]);
-
-  // prev is built into react framework as a known keyword for state variables
-  // const arrays are mutable, but its memory is const
   function updateGradeArray(index, value) {
+    // prev is the previous state of gradesHist, which is an array; we create a copy of it called next, update the value at the specified index, and return the new array to update the state
     setGradesHist((prev) => {
+      // const arrays are mutable, but its memory is const, so we create a new array to trigger React's state update mechanism
       const next = [...prev];
       next[index] = Number(value); // update grade in array
       return next;
