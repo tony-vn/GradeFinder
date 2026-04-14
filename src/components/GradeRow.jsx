@@ -4,14 +4,15 @@ import EditableLabel from "./EditableLabel";
 export default function GradeRow({
   index,
   label,
-  labels,
   setLabels,
   gradeValue,
   weightValue,
+  altWeightValue,
   onGradeChange,
   onWeightChange,
+  onAltWeightChange,
   altWeights,
-  setAltWeights,
+  answer,
 }) {
   return (
     <table>
@@ -58,41 +59,49 @@ export default function GradeRow({
               }}
             />
           </td>
-
-          <td>
-            {altWeights.map((col) => (
-              <td key={col.id}>
-                <label>Alt. Weight</label>
+          {answer === true &&
+            altWeights.map((altWeight, j) => (
+              <td>
+                <label>Alt Weight {j + 1} (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={Number.isNaN(altWeights[index]?.[j]) ? "" : altWeights[index]?.[j]}
+                  onChange={(e) => {
+                    const value = Math.max(
+                      1,
+                      Math.min(100, Number(e.target.value)),
+                    );
+                    onAltWeightChange(index, j, value);
+                  }}
+                />
+              </td>
+            ))}
+          {/* {answer === true &&
+            altWeights[index]?.map((altWeight, j) => (
+              <td key={j}>
+                <label>Alt Weight {j + 1} (%)</label>
                 <input
                   type="number"
                   min="0"
                   max="100"
                   value={
-                    Number.isNaN(col.values[index]) ? "" : col.values[index]
+                    Number.isNaN(altWeights[index]?.[j])
+                      ? ""
+                      : altWeights[index][j]
                   }
                   onChange={(e) => {
                     const value = Math.max(
                       1,
                       Math.min(100, Number(e.target.value)),
                     );
-
-                    setAltWeights((prev) =>
-                      prev.map((item) =>
-                        item.id === col.id
-                          ? {
-                              ...item,
-                              values: item.values.map((v, i) =>
-                                i === index ? value : v,
-                              ),
-                            }
-                          : item,
-                      ),
-                    );
+                    onAltWeightChange(index, j, value);
                   }}
                 />
               </td>
-            ))}
-          </td>
+            ))} */}
+            
         </tr>
       </tbody>
     </table>
