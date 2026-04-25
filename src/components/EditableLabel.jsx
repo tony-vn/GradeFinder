@@ -1,55 +1,24 @@
 import React from "react";
 
-// return based on a bool an input or a span with input value as text
-export default function EditableLabel({
-  value,
-  placeholder,
-  setLabels,
-  index,
-}) {
+export default function EditableLabel({ value, placeholder, onChangeValue }) {
   const [isEditing, setIsEditing] = React.useState(false);
 
-  // two cases for setting editing false
-  const handleBlur = (e) => {
-    if (e.target.value.trim() === "") {
-      setLabels((prev) => {
-        const next = [...prev];
-        next[index] = placeholder;
-        return next;
-      });
-    }
+  const commitValue = (rawValue) => {
+    const newValue = rawValue.trim() === "" ? placeholder : rawValue;
+    onChangeValue(newValue);
     setIsEditing(false);
-  };
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      if (e.target.value.trim() === "") {
-        setLabels((prev) => {
-          const next = [...prev];
-          next[index] = placeholder;
-          return next;
-        });
-      }
-      setIsEditing(false);
-    }
-    if (e.key === "Escape") {
-      setIsEditing(false);
-    }
   };
 
   return isEditing ? (
     <input
       type="text"
       value={value}
-      onChange={(e) => {
-        const newValue = e.target.value;
-        setLabels((prev) => {
-          const next = [...prev];
-          next[index] = newValue;
-          return next;
-        });
+      onChange={(e) => onChangeValue(e.target.value)}
+      onBlur={(e) => commitValue(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") commitValue(e.target.value);
+        if (e.key === "Escape") setIsEditing(false);
       }}
-      onBlur={handleBlur} // event
-      onKeyDown={handleKeyDown} // event
       placeholder={placeholder}
       autoFocus
     />

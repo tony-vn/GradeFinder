@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function YesNoDropdown({ answer, setAnswer}) {
+export default function YesNoDropdown({ answer, updateCourseAnswer, courseIndex}) {
   return (
     <div>
       <label>Alternative Weight Scheme: </label>
@@ -8,7 +8,7 @@ export default function YesNoDropdown({ answer, setAnswer}) {
         value={answer === null ? "" : String(answer)}
         onChange={(e) => {
           const value = e.target.value;
-          setAnswer(value === "" ? null : value === "true");
+          updateCourseAnswer(courseIndex, value === "" ? null : value === "true");
         }}
       >
         <option value="">-- Select --</option>

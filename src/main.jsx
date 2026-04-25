@@ -9,105 +9,262 @@ import GradeRow from "./components/GradeRow.jsx";
 import YesNoDropdown from "./components/YesNoDropdown.jsx";
 import { AddGradeButtons, AltWeightButtons } from "./components/Buttons.jsx";
 
+// begin with default values inside course, allow course name to be editable, allow new course to be created, have courseHist and setCourseHist
+
 export default function Main() {
+  const [courses, setCourses] = useLocalStorage("courses", [
+    {
+      name: "My Course",
+      labels: ["Grade 1"],
+      grades: [null],
+      weights: [100],
+      altWeights: [[null]],
+      answer: null,
+    },
+  ]);
+  let courseIndex = 0; // default to first course in history
   // gradesHist initialized with NaN to populate input field, true length for average calculation is determined
   // from getter function that checks for NaN values, which are added when "Add new grade" button is clicked
   // const [gradesHist, setGradesHist] = React.useState([NaN]);
-  const [gradesHist, setGradesHist] = useLocalStorage("grades", [null]);
-  const [weightHist, setWeightHist] = useLocalStorage("weights", [100]);
-  const sum = calculateGrade(gradesHist, weightHist);
-  const [labels, setLabels] = useLocalStorage("labels", ["Grade 1"]);
-  const [altWeights, setAltWeights] = useLocalStorage("altWeights", [
-    new Array(gradesHist.length).fill(null),
-  ]);
-  const [answer, setAnswer] = useLocalStorage("altWeightScheme", null);
+  // const [labels, setLabels] = useLocalStorage("labels", ["Grade 1"]);
+  // const [gradesHist, setGradesHist] = useLocalStorage("grades", [null]);
+  // const [weightHist, setWeightHist] = useLocalStorage("weights", [100]);
+  // const [altWeights, setAltWeights] = useLocalStorage("altWeights", [
+  //   new Array(gradesHist.length).fill(null),
+  // ]);
+  // const [answer, setAnswer] = useLocalStorage("altWeightScheme", null);
 
-  function updateGradeArray(index, value) {
-    // prev is the previous state of gradesHist, which is an array; we create a copy of it called next, update the value at the specified index, and return the new array to update the state
-    setGradesHist((prev) => {
-      // const arrays are mutable, but its memory is const, so we create a new array to trigger React's state update mechanism
+  const sum = calculateGrade(
+    courses[courseIndex].grades,
+    courses[courseIndex].weights,
+  );
+
+  const updateCourseName = (index, newName) => {
+    setCourses((prev) => {
       const next = [...prev];
-      next[index] = Number(value); // update grade in array
+      next[index] = { ...next[index], name: newName };
+      return next;
+    });
+  };
+
+  const updateCourseLabelAtIndex = (courseIndex, labelIndex, newValue) => {
+    setCourses((prev) => {
+      const next = [...prev];
+      const currentCourse = next[courseIndex];
+      const newLabels = [...currentCourse.labels];
+      newLabels[labelIndex] = newValue;
+
+      next[courseIndex] = {
+        ...currentCourse,
+        labels: newLabels,
+      };
+
+      return next;
+    });
+  };
+
+  const updateCourseGrades = (courseIndex, gradeIndex, newValue) => {
+    setCourses((prev) => {
+      const next = [...prev];
+      const currentCourse = next[courseIndex];
+      const newGrades = [...currentCourse.grades];
+      newGrades[gradeIndex] = newValue;
+
+      next[courseIndex] = {
+        ...currentCourse,
+        grades: newGrades,
+      };
+
+      return next;
+    });
+  };
+
+  const updateCourseWeights = (courseIndex, weightIndex, newWeight) => {
+    setCourses((prev) => {
+      const next = [...prev];
+      const currentCourse = next[courseIndex];
+      const newWeights = [...currentCourse.weights];
+      newWeights[weightIndex] = newWeight;
+
+      next[courseIndex] = {
+        ...currentCourse,
+        weights: newWeights,
+      };
+
+      return next;
+    });
+  };
+
+  const updateCourseAltWeights = (index, newAltWeights) => {
+    setCourses((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], altWeights: newAltWeights };
+      return next;
+    });
+  };
+
+  function updateCourseAnswer(index, newAnswer) {
+    setCourses((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], answer: newAnswer };
       return next;
     });
   }
 
-  const addAltWeights = () => {
-    setAltWeights((prev) => {
+  // function updateGradeArray(index, value) {
+  //   // prev is the previous state of gradesHist, which is an array; we create a copy of it called next, update the value at the specified index, and return the new array to update the state
+  //   setGradesHist((prev) => {
+  //     // const arrays are mutable, but its memory is const, so we create a new array to trigger React's state update mechanism
+  //     const next = [...prev];
+  //     next[index] = Number(value); // update grade in array
+  //     return next;
+  //   });
+  // }
+
+  function addAltWeights() {
+    setCourses((prev) => {
       const next = [...prev];
-      // const row = [...(next[gradesHist.length - 1] || [])];
-      // const row = [[NaN]];
-      //row.push(NaN); // add new alt weight input
-      // const newAltWeightRow = Array.fill(NaN)[gradesHist.length - 1];
-      next[next.length] = new Array(gradesHist.length).fill(null);
-      //console.log(next);
+      const currentCourse = next[courseIndex];
+      const newAltWeights = [
+        ...currentCourse.altWeights,
+        new Array(currentCourse.grades.length).fill(null),
+      ];
+      next[courseIndex] = { ...currentCourse, altWeights: newAltWeights };
       return next;
     });
+  }
 
-    // setAltWeights((prev) => prev.map((row) => [...row, NaN]));
+  // const addAltWeights = () => {
+  //   setAltWeights((prev) => {
+  //     const next = [...prev];
+  //     // const row = [...(next[gradesHist.length - 1] || [])];
+  //     // const row = [[NaN]];
+  //     //row.push(NaN); // add new alt weight input
+  //     // const newAltWeightRow = Array.fill(NaN)[gradesHist.length - 1];
+  //     next[next.length] = new Array(gradesHist.length).fill(null);
+  //     //console.log(next);
+  //     return next;
+  //   });
 
-    // setAltWeights((prev) =>
-    //   gradesHist.map((_, rowIndex) => {
-    //     const existingRow = Array.isArray(prev[rowIndex]) ? prev[rowIndex] : [];
-    //     return [...existingRow, ""];
-    //   }),
-    // );
-  };
+  // };
   //console.log(weightHist);
-  console.log(altWeights);
+
+  function deleteRecentGrade() {
+    setCourses((prev) => {
+      const next = [...prev];
+      const currentCourse = next[courseIndex];
+      const newGrades =
+        currentCourse.grades.length > 1
+          ? currentCourse.grades.slice(0, -1)
+          : currentCourse.grades;
+      next[courseIndex] = { ...currentCourse, grades: newGrades };
+      return next;
+    });
+  }
+
+  function deleteAltWeights() {
+    setCourses((prev) => {
+      const next = [...prev];
+      const currentCourse = next[courseIndex];
+      const newAltWeights =
+        currentCourse.altWeights.length > 1
+          ? currentCourse.altWeights.slice(0, -1)
+          : currentCourse.altWeights;
+      next[courseIndex] = { ...currentCourse, altWeights: newAltWeights };
+      return next;
+    });
+  }
+
   return (
     <div>
-      <h1 className="greeting">Enter your grades: </h1>
+      <h1>
+        <EditableLabel
+          value={courses[courseIndex].name}
+          placeholder="Enter Course Name Here"
+          onChangeValue={(newValue) => updateCourseName(courseIndex, newValue)}
+        />
+      </h1>
+      <h2 className="greeting">Enter your grades: </h2>
       {/* {Array.from({ length: 10 }).map(() => (
         <h1>hello world</h1>
       ))} */}
-      {gradesHist.map((n, i) => (
+      {courses[courseIndex].grades.map((n, i) => (
         <GradeRow
           index={i}
-          label={labels[i]}
-          labels={labels}
-          setLabels={setLabels}
-          gradeValue={gradesHist[i]}
-          weightValue={weightHist[i]}
-          altWeightValue={altWeights[i]}
-          onGradeChange={updateGradeArray}
-          onWeightChange={(index, value) => {
-            setWeightHist((prev) => {
-              const next = [...prev];
-              next[index] = Number(value); // update grade in array
-              return next;
-            });
-          }}
+          label={courses[courseIndex].labels[i]}
+          labels={courses[courseIndex].labels}
+          courseIndex={courseIndex}
+          updateCourseLabelAtIndex={updateCourseLabelAtIndex}
+          gradeValue={courses[courseIndex].grades[i]}
+          weightValue={courses[courseIndex].weights[i]}
+          altWeightValue={courses[courseIndex].altWeights[i]}
+          onGradeChange={updateCourseGrades}
+          onWeightChange={updateCourseWeights}
           onAltWeightChange={(index, j, value) => {
-            setAltWeights((prev) => {
+            // setAltWeights((prev) => {
+            //   // !
+            //   const next = [...prev];
+            //   next[j] = [...next[j]];
+            //   next[j][index] = Number(value);
+            //   return next;
+            // });
+            updateCourseAltWeights(courseIndex, (prev) => {
               const next = [...prev];
-              next[j] = [...next[j]];
-              next[j][index] = Number(value);
+              const currentCourse = next[courseIndex];
+              const newAltWeights = [...currentCourse.altWeights];
+              newAltWeights[j] = [...newAltWeights[j]];
+              newAltWeights[j][index] = Number(value);
+              next[courseIndex] = {
+                ...currentCourse,
+                altWeights: newAltWeights,
+              };
               return next;
             });
           }}
-          altWeights={altWeights}
-          answer={answer}
+          altWeights={courses[courseIndex].altWeights}
+          answer={courses[courseIndex].answer}
         ></GradeRow>
       ))}
       <AddGradeButtons
-        gradesHist={gradesHist}
-        setGradesHist={setGradesHist}
-        setWeightHist={setWeightHist}
+        courses={courses}
+        gradesHist={courses[courseIndex].grades}
+        // setGradesHist={updateCourseGrades}
+        // setWeightHist={updateCourseWeights}
+        courseIndex={courseIndex}
+        grades={courses[courseIndex].grades}
+        weights={courses[courseIndex].weights}
+        setCourses={setCourses}
+        deleteRecentGrade={deleteRecentGrade}
       />
 
-      <YesNoDropdown answer={answer} setAnswer={setAnswer} />
+      <YesNoDropdown
+        answer={courses[courseIndex].answer}
+        updateCourseAnswer={updateCourseAnswer}
+        courseIndex={courseIndex}
+      />
 
-      {answer === true && (
+      {courses[courseIndex].answer === true && (
         <AltWeightButtons
-          gradesHist={gradesHist}
-          setGradesHist={setGradesHist}
-          setWeightHist={setWeightHist}
-          altWeights={altWeights}
-          setAltWeights={setAltWeights}
-          answer={answer}
-          setAnswer={setAnswer}
+          gradesHist={courses[courseIndex].grades}
+          setGradesHist={updateCourseGrades}
+          setWeightHist={updateCourseWeights}
+          altWeights={courses[courseIndex].altWeights}
+          // setAltWeights={updateCourseAltWeights(courseIndex, (prev) => {
+          //   const next = [...prev];
+          //   const currentCourse = next[courseIndex];
+          //   const newAltWeights = [...currentCourse.altWeights];
+          //   newAltWeights[j] = [...newAltWeights[j]];
+          //   newAltWeights[j][index] = Number(value);
+          //   next[courseIndex] = {
+          //     ...currentCourse,
+          //     altWeights: newAltWeights,
+          //   };
+          //   return next;
+          // })}
+          answer={courses[courseIndex].answer}
+          updateCourseAnswer={updateCourseAnswer}
           addAltWeights={addAltWeights}
+          deleteAltWeights={deleteAltWeights}
         />
       )}
       <div>
@@ -124,7 +281,10 @@ export default function Main() {
           const graphRootReact = ReactDOM.createRoot(graphRoot);
           graphRootReact.render(
             <React.StrictMode>
-              <Chart grades={gradesHist} labels={labels} />
+              <Chart
+                grades={courses[courseIndex].grades}
+                labels={courses[courseIndex].labels}
+              />
             </React.StrictMode>,
           );
         }}

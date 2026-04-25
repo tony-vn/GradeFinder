@@ -1,22 +1,36 @@
-export function AddGradeButtons({ gradesHist, setGradesHist, setWeightHist }) {
+export function AddGradeButtons({
+  courses,
+  gradesHist,
+  setGradesHist,
+  setWeightHist,
+  courseIndex,
+  grades,
+  weights,
+  setCourses,
+  deleteRecentGrade,
+}) {
   return (
     <>
       <fieldset className="grade-scheme">
         <button
           onClick={() => {
-            setGradesHist((prev) => [...prev, NaN]);
-            setWeightHist((prev) => [...prev, NaN]);
+            const next = [...courses[courseIndex].grades];
+            next[next.length] = new Array(next.length).fill(null);
+            setCourses((prev) => {
+              const nextCourses = [...prev];
+              nextCourses[courseIndex] = {
+                ...nextCourses[courseIndex],
+                grades: next,
+              };
+              return nextCourses;
+            });
           }}
         >
           Add new grade
         </button>
 
         <button
-          onClick={() => {
-            setGradesHist((prev) =>
-              gradesHist.length > 1 ? prev.slice(0, -1) : prev,
-            );
-          }}
+          onClick={deleteRecentGrade}
         >
           Delete recent grade
         </button>
@@ -25,17 +39,13 @@ export function AddGradeButtons({ gradesHist, setGradesHist, setWeightHist }) {
   );
 }
 
-export function AltWeightButtons({ altWeights, setAltWeights, addAltWeights }) {
+export function AltWeightButtons({ altWeights, setAltWeights, addAltWeights, updateCourseAnswer, answer, deleteAltWeights }) {
   return (
     <>
       <fieldset className="alt-weight-scheme" id="alt-weight-scheme-buttons">
         <button onClick={addAltWeights}>Add alt Weights</button>
         <button
-          onClick={() => {
-            setAltWeights((prev) =>
-              altWeights.length > 1 ? prev.slice(0, -1) : prev,
-            );
-          }}
+          onClick={deleteAltWeights}
         >
           Delete recent alt weight
         </button>
