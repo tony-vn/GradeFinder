@@ -8,10 +8,13 @@ import { calculateGrade } from "./utils/gradeCalculations.js";
 import GradeRow from "./components/GradeRow.jsx";
 import YesNoDropdown from "./components/YesNoDropdown.jsx";
 import { AddGradeButtons, AltWeightButtons } from "./components/Buttons.jsx";
+import "./index.css";
 
 // begin with default values inside course, allow course name to be editable, allow new course to be created, have courseHist and setCourseHist
 
 export default function Main() {
+  // an array of course objects; courseIndex determines which course is currently being displayed and edited; useLocalStorage hook is used to persist courses data across sessions
+  // every change to course is through setCourses
   const [courses, setCourses] = useLocalStorage("courses", [
     {
       name: "My Course",
@@ -41,7 +44,9 @@ export default function Main() {
 
   const updateCourseName = (index, newName) => {
     setCourses((prev) => {
+      // create a shallow copy to avoid direct state mutation
       const next = [...prev];
+      // update the course at the specified index with new name while keeping other properties unchanged
       next[index] = { ...next[index], name: newName };
       return next;
     });
