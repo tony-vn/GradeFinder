@@ -9,6 +9,8 @@ import GradeRow from "./components/GradeRow.jsx";
 import YesNoDropdown from "./components/YesNoDropdown.jsx";
 import { AddGradeButtons, AltWeightButtons } from "./components/Buttons.jsx";
 import "./index.css";
+import AppSidebar from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 // begin with default values inside course, allow course name to be editable, allow new course to be created, have courseHist and setCourseHist
 
@@ -25,7 +27,7 @@ export default function Main() {
       answer: null,
     },
   ]);
-  let courseIndex = 0; // default to first course in history
+  const [courseIndex, setCourseIndex] = React.useState(0);
   // gradesHist initialized with NaN to populate input field, true length for average calculation is determined
   // from getter function that checks for NaN values, which are added when "Add new grade" button is clicked
   // const [gradesHist, setGradesHist] = React.useState([NaN]);
@@ -180,122 +182,181 @@ export default function Main() {
     });
   }
 
+  const createDefaultCourse = (courseNumber) => ({
+    name: `Course ${courseNumber}`,
+    labels: ["Grade 1"],
+    grades: [null],
+    weights: [100],
+    altWeights: [[null]],
+    answer: null,
+  });
+
+  function addCourse() {
+    setCourses((prev) => {
+      const newCourse = createDefaultCourse(prev.length + 1);
+      const next = [...prev, newCourse];
+
+      setCourseIndex(next.length - 1);
+
+      return next;
+    });
+  }
+
+  function deleteCourse(indexToDelete) {
+    setCourses((prev) => {
+      if (prev.length === 1) return prev;
+
+      const next = prev.filter((_, i) => i !== indexToDelete);
+
+      setCourseIndex((currentIndex) => {
+        if (currentIndex === indexToDelete) {
+          return Math.max(0, indexToDelete - 1);
+        }
+
+        if (currentIndex > indexToDelete) {
+          return currentIndex - 1;
+        }
+
+        return currentIndex;
+      });
+
+      return next;
+    });
+  }
+
   return (
     <div>
-      <h1>
-        <EditableLabel
-          value={courses[courseIndex].name}
-          placeholder="Enter Course Name Here"
-          onChangeValue={(newValue) => updateCourseName(courseIndex, newValue)}
-        />
-      </h1>
-      <h2 className="greeting">Enter your grades: </h2>
-      {/* {Array.from({ length: 10 }).map(() => (
-        <h1>hello world</h1>
-      ))} */}
-      {courses[courseIndex].grades.map((n, i) => (
-        <GradeRow
-          index={i}
-          label={courses[courseIndex].labels[i]}
-          labels={courses[courseIndex].labels}
+      <SidebarProvider>
+        <AppSidebar
+          courses={courses}
           courseIndex={courseIndex}
-          updateCourseLabelAtIndex={updateCourseLabelAtIndex}
-          gradeValue={courses[courseIndex].grades[i]}
-          weightValue={courses[courseIndex].weights[i]}
-          altWeightValue={courses[courseIndex].altWeights[i]}
-          onGradeChange={updateCourseGrades}
-          onWeightChange={updateCourseWeights}
-          onAltWeightChange={(index, j, value) => {
-            // setAltWeights((prev) => {
-            //   // !
-            //   const next = [...prev];
-            //   next[j] = [...next[j]];
-            //   next[j][index] = Number(value);
-            //   return next;
-            // });
-            updateCourseAltWeights(courseIndex, (prev) => {
-              const next = [...prev];
-              const currentCourse = next[courseIndex];
-              const newAltWeights = [...currentCourse.altWeights];
-              newAltWeights[j] = [...newAltWeights[j]];
-              newAltWeights[j][index] = Number(value);
-              next[courseIndex] = {
-                ...currentCourse,
-                altWeights: newAltWeights,
-              };
-              return next;
-            });
-          }}
-          altWeights={courses[courseIndex].altWeights}
-          answer={courses[courseIndex].answer}
-        ></GradeRow>
-      ))}
-      <AddGradeButtons
-        courses={courses}
-        gradesHist={courses[courseIndex].grades}
-        // setGradesHist={updateCourseGrades}
-        // setWeightHist={updateCourseWeights}
-        courseIndex={courseIndex}
-        grades={courses[courseIndex].grades}
-        weights={courses[courseIndex].weights}
-        setCourses={setCourses}
-        deleteRecentGrade={deleteRecentGrade}
-      />
-
-      <YesNoDropdown
-        answer={courses[courseIndex].answer}
-        updateCourseAnswer={updateCourseAnswer}
-        courseIndex={courseIndex}
-      />
-
-      {courses[courseIndex].answer === true && (
-        <AltWeightButtons
-          gradesHist={courses[courseIndex].grades}
-          setGradesHist={updateCourseGrades}
-          setWeightHist={updateCourseWeights}
-          altWeights={courses[courseIndex].altWeights}
-          // setAltWeights={updateCourseAltWeights(courseIndex, (prev) => {
-          //   const next = [...prev];
-          //   const currentCourse = next[courseIndex];
-          //   const newAltWeights = [...currentCourse.altWeights];
-          //   newAltWeights[j] = [...newAltWeights[j]];
-          //   newAltWeights[j][index] = Number(value);
-          //   next[courseIndex] = {
-          //     ...currentCourse,
-          //     altWeights: newAltWeights,
-          //   };
-          //   return next;
-          // })}
-          answer={courses[courseIndex].answer}
-          updateCourseAnswer={updateCourseAnswer}
-          addAltWeights={addAltWeights}
-          deleteAltWeights={deleteAltWeights}
+          setCourseIndex={setCourseIndex}
+          addCourse={addCourse}
+          deleteCourse={deleteCourse}
         />
-      )}
-      <div>
-        <label>Current Grade: {sum}</label>
-      </div>
-      <button
-        onClick={() => {
-          // open new window with graph
-          const graphWindow = window.open("", "Graph", "width=800,height=600");
-          graphWindow.document.write("<h1>Grade Progression Graph</h1>");
-          graphWindow.document.write("<div id='graph-root'></div>");
-          // render chart in new window
-          const graphRoot = graphWindow.document.getElementById("graph-root");
-          const graphRootReact = ReactDOM.createRoot(graphRoot);
-          graphRootReact.render(
-            <React.StrictMode>
-              <Chart
-                grades={courses[courseIndex].grades}
-                labels={courses[courseIndex].labels}
-              />
-            </React.StrictMode>,
-          );
-        }}
-      >
-        Show graph
-      </button>
+        <main>
+          <SidebarTrigger />
+          <h1>
+            <EditableLabel
+              value={courses[courseIndex].name}
+              placeholder="Enter Course Name Here"
+              onChangeValue={(newValue) =>
+                updateCourseName(courseIndex, newValue)
+              }
+            />
+          </h1>
+          <h2 className="greeting">Enter your grades: </h2>
+          {/* {Array.from({ length: 10 }).map(() => (<h1>hello world</h1>))} */}
+          {courses[courseIndex].grades.map((n, i) => (
+            <GradeRow
+              index={i}
+              label={courses[courseIndex].labels[i]}
+              labels={courses[courseIndex].labels}
+              courseIndex={courseIndex}
+              updateCourseLabelAtIndex={updateCourseLabelAtIndex}
+              gradeValue={courses[courseIndex].grades[i]}
+              weightValue={courses[courseIndex].weights[i]}
+              altWeightValue={courses[courseIndex].altWeights[i]}
+              onGradeChange={updateCourseGrades}
+              onWeightChange={updateCourseWeights}
+              onAltWeightChange={(index, j, value) => {
+                // setAltWeights((prev) => {
+                //   // !
+                //   const next = [...prev];
+                //   next[j] = [...next[j]];
+                //   next[j][index] = Number(value);
+                //   return next;
+                // });
+                updateCourseAltWeights(courseIndex, (prev) => {
+                  const next = [...prev];
+                  const currentCourse = next[courseIndex];
+                  const newAltWeights = [...currentCourse.altWeights];
+                  newAltWeights[j] = [...newAltWeights[j]];
+                  newAltWeights[j][index] = Number(value);
+                  next[courseIndex] = {
+                    ...currentCourse,
+                    altWeights: newAltWeights,
+                  };
+                  return next;
+                });
+              }}
+              altWeights={courses[courseIndex].altWeights}
+              answer={courses[courseIndex].answer}
+            ></GradeRow>
+          ))}
+          <AddGradeButtons
+            courses={courses}
+            gradesHist={courses[courseIndex].grades}
+            // setGradesHist={updateCourseGrades}
+            // setWeightHist={updateCourseWeights}
+            courseIndex={courseIndex}
+            grades={courses[courseIndex].grades}
+            weights={courses[courseIndex].weights}
+            setCourses={setCourses}
+            deleteRecentGrade={deleteRecentGrade}
+          />
+
+          <YesNoDropdown
+            answer={courses[courseIndex].answer}
+            updateCourseAnswer={updateCourseAnswer}
+            courseIndex={courseIndex}
+          />
+
+          {courses[courseIndex].answer === true && (
+            <AltWeightButtons
+              gradesHist={courses[courseIndex].grades}
+              setGradesHist={updateCourseGrades}
+              setWeightHist={updateCourseWeights}
+              altWeights={courses[courseIndex].altWeights}
+              // setAltWeights={updateCourseAltWeights(courseIndex, (prev) => {
+              //   const next = [...prev];
+              //   const currentCourse = next[courseIndex];
+              //   const newAltWeights = [...currentCourse.altWeights];
+              //   newAltWeights[j] = [...newAltWeights[j]];
+              //   newAltWeights[j][index] = Number(value);
+              //   next[courseIndex] = {
+              //     ...currentCourse,
+              //     altWeights: newAltWeights,
+              //   };
+              //   return next;
+              // })}
+              answer={courses[courseIndex].answer}
+              updateCourseAnswer={updateCourseAnswer}
+              addAltWeights={addAltWeights}
+              deleteAltWeights={deleteAltWeights}
+            />
+          )}
+          <div>
+            <label>Current Grade: {sum}</label>
+          </div>
+          <button
+            onClick={() => {
+              // open new window with graph
+              const graphWindow = window.open(
+                "",
+                "Graph",
+                "width=800,height=600",
+              );
+              graphWindow.document.write("<h1>Grade Progression Graph</h1>");
+              graphWindow.document.write("<div id='graph-root'></div>");
+              // render chart in new window
+              const graphRoot =
+                graphWindow.document.getElementById("graph-root");
+              const graphRootReact = ReactDOM.createRoot(graphRoot);
+              graphRootReact.render(
+                <React.StrictMode>
+                  <Chart
+                    grades={courses[courseIndex].grades}
+                    labels={courses[courseIndex].labels}
+                  />
+                </React.StrictMode>,
+              );
+            }}
+          >
+            Show graph
+          </button>
+        </main>
+      </SidebarProvider>
     </div>
   );
 }
